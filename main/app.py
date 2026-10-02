@@ -1,14 +1,20 @@
-import streamlit as st
+"""Application entry point for the password generator."""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = SCRIPT_DIR.parent
+
+for entry in (str(SCRIPT_DIR), str(PROJECT_ROOT)):
+    if entry in sys.path:
+        sys.path.remove(entry)
+
+sys.path.insert(0, str(PROJECT_ROOT))
+
+from app.models.interface import build_interface
 
 
-st.set_page_config(
-    page_title="Gerador de Senhas",
-    page_icon="🔐",
-    layout="centered",
-)
-
-st.title("Gerador de Senhas Seguras")
-st.write("Configure os critérios da senha e gere uma opção forte e segura.")
-
-# Espaço reservado para a lógica do gerador de senhas
-st.info("Estrutura inicial do módulo pronta para desenvolvimento.")
+build_interface()
