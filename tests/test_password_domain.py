@@ -14,16 +14,16 @@ from app.models.domain import (
 
 
 def test_password_policy_accepts_valid_configuration() -> None:
-    """A valid policy should be accepted."""
+    """A valid password configuration should be accepted."""
     policy = PasswordPolicy(
-        length=16,
+        length=12,
         use_uppercase=True,
         use_lowercase=True,
         use_numbers=True,
         use_symbols=True,
     )
 
-    assert policy.length == 16
+    assert policy.length == 12
     assert policy.use_uppercase is True
     assert policy.use_lowercase is True
     assert policy.use_numbers is True
@@ -31,37 +31,31 @@ def test_password_policy_accepts_valid_configuration() -> None:
 
 
 @pytest.mark.parametrize("length", [MIN_PASSWORD_LENGTH - 1, MAX_PASSWORD_LENGTH + 1])
-def test_password_policy_rejects_out_of_range_length(length: int) -> None:
-    """Length must stay inside the allowed min/max range."""
+def test_password_policy_rejects_invalid_length(length: int) -> None:
+    """Out-of-range lengths must be rejected."""
     with pytest.raises(ValueError):
         PasswordPolicy(length=length)
 
 
-@pytest.mark.parametrize(
-    "kwargs",
-    [
-        {
-            "length": 12,
-            "use_uppercase": False,
-            "use_lowercase": False,
-            "use_numbers": False,
-            "use_symbols": False,
-        },
-    ],
-)
-def test_password_policy_requires_at_least_one_character_group(kwargs: dict[str, bool | int]) -> None:
-    """Disabling every charset must be rejected."""
+def test_password_policy_requires_at_least_one_character_group() -> None:
+    """At least one character type must remain enabled."""
     with pytest.raises(ValueError):
-        PasswordPolicy(**kwargs)
+        PasswordPolicy(
+            length=10,
+            use_uppercase=False,
+            use_lowercase=False,
+            use_numbers=False,
+            use_symbols=False,
+        )
 
 
 def test_password_policy_rejects_non_integer_lengths() -> None:
     """Length must be an integer value."""
     with pytest.raises(TypeError):
-        PasswordPolicy(length="16")
+        PasswordPolicy(length="12")
 
 
-def test_generate_password_respects_selected_character_groups() -> None:
+def test_generate_password_respects_policy_rules() -> None:
     """Generated passwords must satisfy the selected policy."""
     policy = PasswordPolicy(
         length=18,
@@ -81,8 +75,8 @@ def test_generate_password_respects_selected_character_groups() -> None:
     assert any(not char.isalnum() for char in password)
 
 
-def test_generate_password_excludes_unselected_groups() -> None:
-    """Disabled character groups must not appear in the result."""
+def test_generate_password_excludes_unselected_character_groups() -> None:
+    """Disabled groups must not appear in the generated password."""
     policy = PasswordPolicy(
         length=12,
         use_uppercase=True,
@@ -111,20 +105,27 @@ def test_generate_password_excludes_unselected_groups() -> None:
     ],
 )
 def test_evaluate_password_strength(password: str, expected: PasswordStrength) -> None:
-    """Daily password strength should be graded correctly."""
+    """Strength should be based on length and entropy, not just format blocks."""
     assert evaluate_password_strength(password) == expected
 
 
-def test_validate_password_rejects_invalid_password() -> None:
-    """A password that violates the policy should be rejected."""
-    policy = PasswordPolicy(length=10, use_uppercase=True, use_lowercase=True, use_numbers=True, use_symbols=True)
+def test_validate_password_rejects_invalid_passwords() -> None:
+    """Passwords that violate policy rules must be rejected."""
+    policy = PasswordPolicy(
+        length=10,
+        use_uppercase=True,
+        use_lowercase=True,
+        use_numbers=True,
+        use_symbols=True,
+    )
 
     assert validate_password("abcd", policy) is False
     assert validate_password("abcdefghi!", policy) is False
+    assert validate_password("Abcdefghi!", policy) is False
 
 
-def test_generate_password_handles_boundary_lengths() -> None:
-    """Minimum and maximum accepted sizes should generate valid passwords."""
+def test_generate_password_handles_minimum_and_maximum_lengths() -> None:
+    """Boundary lengths should generate valid passwords."""
     minimum_policy = PasswordPolicy(
         length=MIN_PASSWORD_LENGTH,
         use_uppercase=True,
@@ -144,7 +145,7 @@ def test_generate_password_handles_boundary_lengths() -> None:
     assert len(generate_password(maximum_policy)) == MAX_PASSWORD_LENGTH
 
 
-def test_validate_password_requires_string_type() -> None:
+def test_validate_password_requires_string_input() -> None:
     """The password must be a string to be validated."""
     policy = PasswordPolicy(length=12)
 
