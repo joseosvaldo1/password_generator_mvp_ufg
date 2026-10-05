@@ -11,8 +11,8 @@ import streamlit as st
 
 from app.models.domain import PasswordStrength, evaluate_password_strength
 
-MIN_PASSWORD_LENGTH: Final[int] = 8
-MAX_PASSWORD_LENGTH: Final[int] = 128
+MIN_PASSWORD_LENGTH: Final[int] = 4
+MAX_PASSWORD_LENGTH: Final[int] = 50
 
 
 @dataclass(frozen=True)
@@ -175,7 +175,7 @@ def render_password_form() -> PasswordConfig:
         "Tamanho da senha",
         min_value=MIN_PASSWORD_LENGTH,
         max_value=MAX_PASSWORD_LENGTH,
-        value=16,
+        value=6,
         step=1,
         help="Escolha o tamanho da senha para equilibrar segurança e usabilidade.",
     )
@@ -238,7 +238,15 @@ def build_interface() -> None:
     st.title("Gerador de Senhas Seguras")
     st.write("Configure os critérios e gere uma senha forte e confiável.")
 
-    config = render_password_form()
+    try:
+        config = render_password_form()
+    except ValueError:
+        st.error(
+            "⚠️ Nenhum tipo de caractere foi selecionado. "
+            "Escolha pelo menos uma opção para gerar a senha."
+        )
+        return
+
     render_password_strength(config)
 
     if st.button("Gerar senha"):

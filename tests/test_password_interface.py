@@ -85,3 +85,30 @@ def test_validate_password_config_rejects_invalid_config() -> None:
                 use_symbols=False,
             )
         )
+
+
+def test_build_interface_handles_empty_character_selection(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The interface should show a friendly message when no character type is selected."""
+    messages: list[str] = []
+
+    monkeypatch.setattr(interface.st, "title", lambda *args, **kwargs: None)
+    monkeypatch.setattr(interface.st, "write", lambda *args, **kwargs: None)
+    monkeypatch.setattr(interface.st, "subheader", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        interface.st,
+        "slider",
+        lambda *args, **kwargs: 16,
+    )
+    monkeypatch.setattr(
+        interface.st,
+        "checkbox",
+        lambda *args, **kwargs: False,
+    )
+    monkeypatch.setattr(interface.st, "error", lambda message: messages.append(message))
+
+    interface.build_interface()
+
+    assert messages == [
+        "⚠️ Nenhum tipo de caractere foi selecionado. "
+        "Escolha pelo menos uma opção para gerar a senha."
+    ]
