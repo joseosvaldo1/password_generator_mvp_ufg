@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import secrets
 import string
 from dataclasses import dataclass
@@ -102,30 +103,31 @@ def get_enabled_character_groups(config: PasswordConfig) -> int:
 
 
 def estimate_password_strength(config: PasswordConfig) -> tuple[PasswordStrength, int, str]:
-    """Estimates the password strength in real time from size and content mix."""
+    """Estimates the password strength using entropy and character diversity."""
     validate_password_config(config)
 
-    configured_groups = get_enabled_character_groups(config)
+    enabled_groups = get_enabled_character_groups(config)
+    character_pool = 0
 
-    if config.length >= 20:
-        length_score = 3
-    elif config.length >= 12:
-        length_score = 2
-    elif config.length >= 8:
-        length_score = 1
-    else:
-        length_score = 0
+    if config.use_uppercase:
+        character_pool += 26
+    if config.use_lowercase:
+        character_pool += 26
+    if config.use_numbers:
+        character_pool += 10
+    if config.use_symbols:
+        character_pool += 32
 
-    total_score = length_score + configured_groups
+    entropy_bits = config.length * math.log2(character_pool)
 
-    if total_score >= 7:
+    if config.length >= 9 and enabled_groups >= 3 and entropy_bits >= 55:
         return (
             PasswordStrength.STRONG,
             100,
-            "Senha forte: combina tamanho adequado com boa variedade de caracteres.",
+            "Senha forte: combina tamanho adequado com muita variedade de caracteres.",
         )
 
-    if total_score >= 4:
+    if config.length >= 8 and enabled_groups >= 2 and entropy_bits >= 40:
         return (
             PasswordStrength.MEDIUM,
             65,

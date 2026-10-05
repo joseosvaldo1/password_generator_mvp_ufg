@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import secrets
 import string
 from dataclasses import dataclass
@@ -141,21 +142,38 @@ def validate_password(password: str, policy: PasswordPolicy) -> bool:
 
 
 def evaluate_password_strength(password: str) -> PasswordStrength:
-    """Assigns a qualitative strength based on password characteristics."""
+    """Assigns a qualitative strength based on real entropy and character variety."""
     if not isinstance(password, str):
         raise TypeError("A senha deve ser uma string.")
+
+    if not password:
+        return PasswordStrength.WEAK
 
     has_upper = any(char.isupper() for char in password)
     has_lower = any(char.islower() for char in password)
     has_digit = any(char.isdigit() for char in password)
     has_symbol = any(not char.isalnum() for char in password)
 
-    score = sum((has_upper, has_lower, has_digit, has_symbol))
+    character_pool = 0
+    if has_upper:
+        character_pool += 26
+    if has_lower:
+        character_pool += 26
+    if has_digit:
+        character_pool += 10
+    if has_symbol:
+        character_pool += 32
 
-    if len(password) >= 12 and score >= 3:
+    if character_pool == 0:
+        return PasswordStrength.WEAK
+
+    diversity_score = sum((has_upper, has_lower, has_digit, has_symbol))
+    entropy_bits = len(password) * math.log2(character_pool)
+
+    if len(password) >= 9 and diversity_score >= 3 and entropy_bits >= 55:
         return PasswordStrength.STRONG
 
-    if len(password) >= 8 and score >= 2:
+    if len(password) >= 8 and diversity_score >= 2 and entropy_bits >= 40:
         return PasswordStrength.MEDIUM
 
     return PasswordStrength.WEAK
