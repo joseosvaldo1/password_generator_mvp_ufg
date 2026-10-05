@@ -1,4 +1,4 @@
-"""Typed interface helpers for the password generator app."""
+"""Interface helpers for the password generator app."""
 
 from __future__ import annotations
 
@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from typing import Final
 
 import streamlit as st
+
+from app.models.domain import PasswordStrength, evaluate_password_strength
 
 MIN_PASSWORD_LENGTH: Final[int] = 8
 MAX_PASSWORD_LENGTH: Final[int] = 128
@@ -85,6 +87,58 @@ def get_character_pool(config: PasswordConfig) -> str:
     return "".join(pool)
 
 
+def get_enabled_character_groups(config: PasswordConfig) -> int:
+    """Counts how many character groups are enabled."""
+    validate_password_config(config)
+
+    return sum(
+        (
+            config.use_uppercase,
+            config.use_lowercase,
+            config.use_numbers,
+            config.use_symbols,
+        )
+    )
+
+
+def estimate_password_strength(config: PasswordConfig) -> tuple[PasswordStrength, int, str]:
+    """Estimates the password strength in real time from size and content mix."""
+    validate_password_config(config)
+
+    configured_groups = get_enabled_character_groups(config)
+
+    if config.length >= 20:
+        length_score = 3
+    elif config.length >= 12:
+        length_score = 2
+    elif config.length >= 8:
+        length_score = 1
+    else:
+        length_score = 0
+
+    total_score = length_score + configured_groups
+
+    if total_score >= 7:
+        return (
+            PasswordStrength.STRONG,
+            100,
+            "Senha forte: combina tamanho adequado com boa variedade de caracteres.",
+        )
+
+    if total_score >= 4:
+        return (
+            PasswordStrength.MEDIUM,
+            65,
+            "Senha moderada: aumente o tamanho ou a variedade para reforçar a segurança.",
+        )
+
+    return (
+        PasswordStrength.WEAK,
+        30,
+        "Senha fraca: prefira mais caracteres e mais tipos de opções ativadas.",
+    )
+
+
 def generate_password(config: PasswordConfig) -> str:
     """Generates a secure random password according to the selected rules."""
     validate_password_config(config)
@@ -123,7 +177,7 @@ def render_password_form() -> PasswordConfig:
         max_value=MAX_PASSWORD_LENGTH,
         value=16,
         step=1,
-        help="Escolha o tamanho mínimo e máximo recomendado para segurança.",
+        help="Escolha o tamanho da senha para equilibrar segurança e usabilidade.",
     )
 
     use_uppercase = st.checkbox("Incluir letras maiúsculas", value=True)
@@ -142,6 +196,26 @@ def render_password_form() -> PasswordConfig:
     return config
 
 
+def render_password_strength(config: PasswordConfig) -> None:
+    """Shows the estimated password strength according to the selected configuration."""
+    strength, percentage, message = estimate_password_strength(config)
+
+    st.subheader("Força estimada")
+    st.progress(percentage / 100)
+
+    if strength == PasswordStrength.STRONG:
+        st.success(f"{strength.value.title()} — {message}")
+    elif strength == PasswordStrength.MEDIUM:
+        st.warning(f"{strength.value.title()} — {message}")
+    else:
+        st.error(f"{strength.value.title()} — {message}")
+
+    st.caption(
+        "A força é calculada com base no tamanho e na variedade dos caracteres "
+        "selecionados."
+    )
+
+
 def render_password_result(password: str) -> None:
     """Displays the generated password in the interface."""
     if not password:
@@ -150,6 +224,14 @@ def render_password_result(password: str) -> None:
     st.subheader("Senha gerada")
     st.code(password, language="text")
 
+    strength = evaluate_password_strength(password)
+    if strength == PasswordStrength.STRONG:
+        st.success(f"Força da senha gerada: {strength.value.title()}")
+    elif strength == PasswordStrength.MEDIUM:
+        st.warning(f"Força da senha gerada: {strength.value.title()}")
+    else:
+        st.error(f"Força da senha gerada: {strength.value.title()}")
+
 
 def build_interface() -> None:
     """Creates the main password generator interface in Streamlit."""
@@ -157,6 +239,7 @@ def build_interface() -> None:
     st.write("Configure os critérios e gere uma senha forte e confiável.")
 
     config = render_password_form()
+    render_password_strength(config)
 
     if st.button("Gerar senha"):
         try:

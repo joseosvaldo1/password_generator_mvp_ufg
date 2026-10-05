@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+# Link do streamlit: https://passwordgeneratorufg.streamlit.app/
+
 import sys
 from pathlib import Path
 
