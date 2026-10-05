@@ -1,23 +1,30 @@
 # Password Generator MVP
 
-Projeto de Produto Mínimo Viável para um gerador de senhas seguras com interface web, desenvolvido em Python usando Streamlit.
+Aplicação web para geração de senhas seguras, com interface em Streamlit, validação de regras de negócio e avaliação de força baseada em entropia e variedade de caracteres.
 
-## Objetivo
+## Deploy online
 
-Criar uma aplicação simples e funcional que gere senhas aleatórias e seguras com base em critérios definidos pelo usuário, como:
+A aplicação está disponível em:
 
-- tamanho da senha
-- inclusão de letras maiúsculas
-- inclusão de letras minúsculas
-- inclusão de números
-- inclusão de caracteres especiais
+- https://passwordgeneratorufg.streamlit.app/
 
-A proposta também contempla uma experiência assistida por IA, com reforço de segurança e usabilidade na geração das senhas.
+## Visão geral
 
-## Stack
+O projeto tem como objetivo oferecer uma ferramenta simples e funcional para gerar senhas fortes, configuráveis e fáceis de usar. A aplicação permite:
 
-- Python
+- definir o tamanho da senha
+- ativar ou desativar letras maiúsculas, minúsculas, números e símbolos
+- validar regras da política de senha
+- avaliar a força da senha em tempo real
+- gerar uma senha segura em poucos segundos
+
+A solução foi estruturada em camadas para manter organização e facilitar testes automatizados.
+
+## Stack tecnológica
+
+- Python 3.10+
 - Streamlit
+- Pytest
 - Git
 - VS Code
 
@@ -25,14 +32,21 @@ A proposta também contempla uma experiência assistida por IA, com reforço de 
 
 - Python 3.10 ou superior
 - pip
-- ambiente virtual (venv)
+- ambiente virtual (`venv`)
 
-## Como rodar localmente
+## Instalação
 
-1. Abra o terminal na raiz do projeto.
-2. Ative o ambiente virtual:
+1. Clone o repositório:
 
 ```bash
+git clone https://github.com/joseosvaldo1/password_generator_mvp_ufg.git
+cd password_project_ufg
+```
+
+2. Crie e ative o ambiente virtual:
+
+```bash
+python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
@@ -42,74 +56,121 @@ A proposta também contempla uma experiência assistida por IA, com reforço de 
 pip install -r requirements.txt
 ```
 
-4. Inicie a aplicação:
+## Execução da aplicação
+
+Na raiz do projeto, execute:
 
 ```bash
-streamlit run app.py
+streamlit run main/app.py
 ```
 
-5. Acesse no navegador a URL exibida no terminal, normalmente:
+Ou, se estiver usando o ambiente já configurado:
+
+```bash
+python -m streamlit run main/app.py
+```
+
+A aplicação abrirá no navegador em um endereço semelhante a:
 
 ```text
 http://localhost:8501
 ```
 
-## Estrutura inicial do projeto
+## Estrutura do projeto
 
 ```text
 password_project_ufg/
+├── app/
+│   └── models/
+│       ├── __init__.py
+│       ├── domain.py
+│       ├── interface.py
+│       ├── services.py
+│       └── tests.py
+├── docs/
+│   ├── arquitetura-componentes.md
+│   ├── backlog.md
+│   └── escopo-mvp.md
+├── main/
+│   └── app.py
+├── tests/
+│   ├── test_password_domain.py
+│   ├── test_password_service.py
+│   └── test_password_interface.py
 ├── .gitignore
 ├── README.md
 ├── requirements.txt
-├── app.py
-├── tests/
-│   └── test_password_generator.py
-├── .venv/
-└── .git/
+└── .venv/
 ```
 
-## Funcionalidades previstas
+## Arquitetura
 
-- geração de senha com tamanho configurável
-- escolha de tipos de caracteres
-- cópia fácil da senha gerada
-- interface web intuitiva
-- indicadores de segurança
-- testes automatizados para validar a geração das senhas
-- futura integração com IA para auxiliar na criação de senhas
+O projeto foi organizado em camadas para manter a separação de responsabilidades:
 
-## Roadmap de releases
+### 1. Camada de domínio
+Arquivo principal: `app/models/domain.py`
 
-### Release 1.0 - MVP
-- geração básica de senhas
-- parâmetros personalizáveis
-- interface simples com Streamlit
-- cópia da senha para área de transferência
+Responsável por:
+- definição de políticas de senha
+- regras de validação
+- geração aleatória
+- classificação de força da senha
+- avaliação de entropia e variedade de caracteres
 
-### Release 1.1 - Melhorias de UX
-- validação visual de força da senha
-- mensagens de recomendação de segurança
-- suporte a geração em lote
+### 2. Camada de serviço
+Arquivo principal: `app/models/services.py`
 
-### Release 2.0 - Assistência com IA
-- sugestões inteligentes de senhas
-- explicação de critérios de segurança
-- recomendações personalizadas
+Responsável por:
+- encapsular regras de negócio
+- orquestrar geração e validação
+- expor operações reutilizáveis para a interface
 
-### Release 3.0 - Produto mais completo
-- histórico de senhas geradas
-- exportação de senhas
-- autenticação e armazenamento seguro (quando aplicável)
-- integração com serviços externos
+### 3. Camada de interface
+Arquivo principal: `app/models/interface.py`
+
+Responsável por:
+- renderizar controles do Streamlit
+- coletar configurações do usuário
+- mostrar feedback visual da força da senha
+- apresentar a senha gerada em formato legível para cópia
+
+### 4. Camada de entrada da aplicação
+Arquivo principal: `main/app.py`
+
+Responsável por:
+- inicializar a aplicação
+- configurar o caminho do projeto
+- chamar a interface principal
+
+## Uso da IA
+
+A aplicação foi desenvolvida com apoio do GitHub Copilot como assistente de código, utilizado para:
+
+- acelerar a escrita e revisão do código Python
+- sugerir melhorias de estrutura, clareza e organização do projeto
+- auxiliar na criação e refinamento de testes automatizados
+- apoiar a análise de regras de negócio e da lógica de força da senha
+- propor melhorias na interface e no fluxo de validação do usuário
+
+A IA também é parte da visão de evolução do produto para cenários futuros, como:
+
+- recomendar combinações seguras de caracteres
+- explicar por que uma senha está fraca, média ou forte
+- sugerir melhorias em tempo real com base na política configurada
+- orientar o usuário em relação ao tamanho ideal e à combinação de grupos de caracteres
+
+Nesse MVP, a IA foi usada sobretudo como assistente de desenvolvimento, enquanto o núcleo funcional da geração e validação continua sendo executado localmente sem depender de serviços externos.
 
 ## Testes
 
-Os testes do projeto devem ficar na pasta `tests/` e validar:
+A suíte de testes está localizada em `tests/` e cobre:
 
-- tamanho mínimo e máximo da senha
-- presença de letras maiúsculas, minúsculas, números e caracteres especiais
-- geração aleatória com critérios configurados
-- rejeição de entradas inválidas
+- validação de tamanho mínimo e máximo
+- rejeição de opções inválidas
+- presença de letras maiúsculas, minúsculas, números e símbolos
+- geração conforme a política selecionada
+- força da senha baseada em entropia e variedade
+- comportamento da interface e mensagens de erro
 
 Para executar os testes:
 
@@ -117,10 +178,44 @@ Para executar os testes:
 pytest
 ```
 
-## Observações
+Ou, se quiser usar o ambiente virtual:
 
-Este projeto foi iniciado como um MVP para validar a ideia de um gerador de senhas seguras com interface amigável e potencial para evolução com inteligência artificial.
+```bash
+.\.venv\Scripts\python -m pytest -q
+```
+
+## Limitações
+
+A solução atual ainda possui algumas limitações importantes:
+
+- a geração é aleatória e segura dentro do escopo do projeto, mas não possui histórico persistente de senhas geradas
+- não há armazenamento seguro de senhas ou credenciais
+- não há autenticação ou gerenciamento de usuários
+- a avaliação de força é heurística e orientada à experiência do usuário, não a uma análise criptográfica profunda
+- a interface é funcional e clara, mas ainda é um MVP voltado para demonstração e validação de conceito
+
+## Próximos passos
+
+Algumas melhorias planejadas para evolução do projeto:
+
+- histórico de senhas geradas com opção de visualizar e copiar
+- exportação em formatos úteis
+- mecanismo de sugestão inteligente com IA
+- ranking de segurança mais detalhado
+- suporte a geração em lote
+- melhorias de UX e acessibilidade
+- integração com autenticação segura em cenários reais
+
+## Contribuição
+
+Contribuições são bem-vindas. Para sugerir melhorias ou corrigir bugs:
+
+1. faça um fork do projeto
+2. crie uma branch para a funcionalidade
+3. implemente a mudança
+4. rode os testes
+5. envie um pull request
 
 ## Licença
 
-Este projeto é de uso educacional e pode ser adaptado conforme a necessidade do desenvolvimento.
+Este projeto é destinado a fins educacionais e de demonstração. Pode ser adaptado e expandido conforme a necessidade do desenvolvimento.
