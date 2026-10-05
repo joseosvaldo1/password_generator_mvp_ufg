@@ -106,6 +106,7 @@ def test_generate_password_excludes_unselected_groups() -> None:
     [
         ("abc", PasswordStrength.WEAK),
         ("Abc12345", PasswordStrength.MEDIUM),
+        ("A1b2C3d4!", PasswordStrength.STRONG),
         ("Abc123!@#Def", PasswordStrength.STRONG),
     ],
 )
